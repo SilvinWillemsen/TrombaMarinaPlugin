@@ -296,13 +296,16 @@ void TrombaString::mouseUp (const MouseEvent& e)
 void TrombaString::setBowingParameters (float x, float y, double Fb, double Vb, bool mouseInteraction)
 {
 #ifndef NOEDITOR
-    xPos = x * getWidth();
-	yPos = y * getHeight();
+    xPos = x;
+	yPos = y;
 #endif
     bowFlag = true;
     _Vb.store (Global::bowDebug || !mouseInteraction ? Vb : (y / static_cast<float> (getHeight()) - 0.5) * 2.0 * 0.2);
     _Fb.store (Fb);
-    
+#ifdef NOEDITOR
     int loc = Global::bowDebug ? floor(N * 0.5) : floor (N * static_cast<float> (x));
+#else
+	int loc = Global::bowDebug ? floor(N * 0.5) : floor(N * static_cast<float> (xPos) / static_cast<float> (getWidth()));
+#endif
     _bowPos.store (Global::clamp (loc, 3, N - 5)); // check whether these values are correct!!);
 }

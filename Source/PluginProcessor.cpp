@@ -29,27 +29,27 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		"Velocity", // parameter name
 		-0.2f,   // minimum value
 		0.2f,   // maximum value
-		0.2f)); // default value
+		0.1f)); // default value
 	addParameter(bowForce = new AudioParameterFloat("bowForce", // parameter ID
 		"Force", // parameter name
 		0.0f,   // minimum value
-		1.0f,   // maximum value
-		0.05f)); // default value
+		0.5f,   // maximum value
+		0.08f)); // default value
 	addParameter(bowPosition = new AudioParameterFloat("bowPosition", // parameter ID
 		"Position", // parameter name
-		0.0f,   // minimum value
-		1.0f,   // maximum value
-		0.5f)); // default value
+		0.1f,   // minimum value
+		0.3f,   // maximum value
+		0.2f)); // default value
 	addParameter(mixString = new AudioParameterFloat("mixString",
 		"String Volume",
 		0.0f,
 		1.0f,
-		0.5f));
+		0.0f));
 	addParameter(mixBridge = new AudioParameterFloat("mixBridge",
 		"Bridge Volume",
 		0.0f,
 		1.0f,
-		0.5f));
+		0.2f));
 	addParameter(mixBody = new AudioParameterFloat("mixBody",
 		"Body Volume",
 		0.0f,
@@ -186,10 +186,11 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	body = tromba->getBody();
 
 	trombaString->setFingerPos(0.0);
-
+#ifdef NOEDITOR
 	prevMixString = *mixString;
 	prevMixBridge = *mixBridge;
 	prevMixBody = *mixBody;
+#endif
 }
 
 void TrombaMarinaPluginAudioProcessor::releaseResources()
@@ -255,7 +256,7 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
 			+ tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
 #else 
-		output = tromba->getOutput() * (Global::debug ? 1.0 : Global::outputScaling);
+		output = tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling);
 #endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);
