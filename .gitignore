@@ -1,3 +1,4 @@
 Builds/
 
 !Builds\VisualStudio2017\x64\Release\Unity Plugin\audioplugin_TrombaMarinaPlugin.dll
+!Builds\VisualStudio2017\x64\Release\Unity Plugin\audioplugin_TrombaMarinaPlugin_UnityScript.cs
