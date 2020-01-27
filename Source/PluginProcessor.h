@@ -80,11 +80,20 @@ private:
 
 	double bridgeLocRatio;
 	double offset;
+
 #ifdef NOEDITOR
 	AudioParameterFloat* bowVelocity;
 	AudioParameterFloat* bowForce;
 	AudioParameterFloat* bowPosition;
+	AudioParameterFloat* mixString;
+	AudioParameterFloat* mixBridge;
+	AudioParameterFloat* mixBody;
+
+	float prevMixString, prevMixBridge, prevMixBody;
+	float aG = 0.99; // averaging filter gain
 #endif
+
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrombaMarinaPluginAudioProcessor)
 };

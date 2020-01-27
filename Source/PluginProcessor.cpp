@@ -40,7 +40,21 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		0.0f,   // minimum value
 		1.0f,   // maximum value
 		0.5f)); // default value
-//...
+	addParameter(mixString = new AudioParameterFloat("mixString",
+		"String Volume",
+		0.0f,
+		1.0f,
+		0.5f));
+	addParameter(mixBridge = new AudioParameterFloat("mixBridge",
+		"Bridge Volume",
+		0.0f,
+		1.0f,
+		0.5f));
+	addParameter(mixBody = new AudioParameterFloat("mixBody",
+		"Body Volume",
+		0.0f,
+		1.0f,
+		0.5f));
 #endif
 }
 
@@ -121,7 +135,7 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	NamedValueSet parameters;
 
-	offset = 1e-5;
+	offset = 0;
 
 	// string
 	double r = 0.0005;
@@ -146,13 +160,13 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("offset", offset);
 
 	// body
-	parameters.set("rhoP", 7850.0);
-	parameters.set("H", 0.001);
-	parameters.set("EP", 2e11);
+	parameters.set("rhoP", 10.0);
+	parameters.set("H", 0.01);
+	parameters.set("EP", 2e5);
 	parameters.set("Lx", 1.5);
 	parameters.set("Ly", 0.4);
 	parameters.set("s0P", 5);
-	parameters.set("s1P", 0.01);
+	parameters.set("s1P", 0.05);
 
 	// connection
 	parameters.set("K1", 5.0e6);
@@ -165,7 +179,6 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("colRatioX", 0.8);
 	parameters.set("colRatioY", 0.5);
 
-
 	tromba = std::make_shared<Tromba> (parameters, k);
 
 	trombaString = tromba->getString();
@@ -173,6 +186,10 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	body = tromba->getBody();
 
 	trombaString->setFingerPos(0.0);
+
+	prevMixString = *mixString;
+	prevMixBridge = *mixBridge;
+	prevMixBody = *mixBody;
 }
 
 void TrombaMarinaPluginAudioProcessor::releaseResources()
@@ -230,11 +247,20 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		tromba->solveSystem();
 		tromba->updateStates();
 
+#ifdef NOEDITOR
+		prevMixString = prevMixString * aG + (1 - aG) * (*mixString);
+		prevMixBridge = prevMixBridge * aG + (1 - aG) * (*mixBridge);
+		prevMixBody = prevMixBody * aG + (1 - aG) * (*mixBody);
+		output = tromba->getOutput(0.9) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString
+			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
+			+ tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
+#else 
 		output = tromba->getOutput() * (Global::debug ? 1.0 : Global::outputScaling);
+#endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);
 
-		++t;
+		//++t;
 	}
 	
 }
