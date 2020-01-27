@@ -27,8 +27,8 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 #ifdef NOEDITOR
 	addParameter(bowVelocity = new AudioParameterFloat ("bowVelocity", // parameter ID
 		"Velocity", // parameter name
-		-0.2f,   // minimum value
-		0.2f,   // maximum value
+		-0.5f,   // minimum value
+		0.5f,   // maximum value
 		0.1f)); // default value
 	addParameter(bowForce = new AudioParameterFloat("bowForce", // parameter ID
 		"Force", // parameter name

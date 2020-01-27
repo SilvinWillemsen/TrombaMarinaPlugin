@@ -10,7 +10,7 @@
 
 #pragma once
 #define CUBICINTERPOL
-#define NOEDITOR
+#define NOEDITOR // define if compiling for unity
 namespace Global
 {
     static double clamp (double val, double min, double max)
