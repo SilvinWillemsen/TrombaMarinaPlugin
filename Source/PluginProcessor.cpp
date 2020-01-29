@@ -55,6 +55,11 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		0.0f,
 		1.0f,
 		0.5f));
+	addParameter(initFreq = new AudioParameterFloat("initFreq",
+		"Init Frequency",
+		45.0f,
+		120.0f,
+		60.0f));
 #endif
 }
 
@@ -139,7 +144,7 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	// string
 	double r = 0.0005;
-	double f0 = 60.0;
+	double f0 = *initFreq;
 	double rhoS = 7850.0;
 	double A = r * r * double_Pi;
 	double T = (f0 * f0 * 4.0) * rhoS * A;

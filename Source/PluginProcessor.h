@@ -82,6 +82,7 @@ private:
 	double offset;
 
 #ifdef NOEDITOR
+	AudioParameterFloat* initFreq;
 	AudioParameterFloat* bowVelocity;
 	AudioParameterFloat* bowForce;
 	AudioParameterFloat* bowPosition;
