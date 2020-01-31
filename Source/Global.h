@@ -11,6 +11,8 @@
 #pragma once
 #define CUBICINTERPOL
 #define NOEDITOR // define if compiling for unity
+//#define EXPONENTIALBOW
+
 namespace Global
 {
     static double clamp (double val, double min, double max)
@@ -27,6 +29,8 @@ namespace Global
         }
         return val;
     }
+	static inline int sgn(double val) { return (0 < val) - (val < 0); };
+
 #ifdef NOINTERPOL
     static double interpolation (double* uVec, int bp, double alpha)
     {

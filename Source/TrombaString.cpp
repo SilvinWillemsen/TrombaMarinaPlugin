@@ -56,10 +56,44 @@ TrombaString::TrombaString (NamedValueSet& parameters, double k) :  k (k),
     // Newton Variables bow model
     cOhSq = cSq / (h * h);
     kOhhSq = kappaSq / (h * h * h * h);
+    
+#ifdef EXPONENTIALBOW
     tol = 1e-4;
     
     a = 100; // Free parameter
     BM = sqrt(2.0 * a) * exp (0.5);
+#else
+    // Elasto-Plastic bow model
+    
+    //// the Contact Force (be with you) //////
+    mus = 0.8; // static friction coeff
+    mud = 0.3; // dynamic friction coeff (must be < mus!!) %EDIT: and bigger than 0
+    strv = 0.1;      // "stribeck" velocity
+    
+    _Fn.store(0.3);    // Normal force
+    
+    _fC.store (mud * _Fn.load()); // coulomb force
+    _fS.store (mus * _Fn.load()); // stiction force
+    
+    sig0 = 100000;                   // bristle stiffness
+    sig1 = 0.001*sqrt(sig0);          // bristle damping
+    sig2 = 0.4;                     // viscous friction term
+    sig3 = 0.0;                       // noise term
+    oOstrvSq = 1 / (strv * strv);   // One over strv^2
+
+    // Initialise variables for Newton Raphson
+    tol = 1e-7;
+    q = 0;
+    qPrev = 0;
+	z = 0;
+    zPrev = 0;
+    zDotPrev = 0;
+    anPrev = 0;
+    fp = 0;
+    
+    velCalcDiv =  1 / (sig2 + scaleFact * (2/k + 2 * s0));
+    oOSig0 = 1 / sig0;
+#endif
     
     // set coefficients for update equation
     B1 = s0 * k;
@@ -86,8 +120,12 @@ TrombaString::TrombaString (NamedValueSet& parameters, double k) :  k (k),
     s1 *= rho * A;
     b2 = (2.0 * s1) / (k * h * h);
     
-    E1 = (1.0 / h) * BM / (rho * A / (k * k) + s0 / k) ;
-
+#ifdef EXPONENTIALBOW
+    E = (1.0 / h) * BM / (rho * A / (k * k) + s0 / k);
+#else
+    E = 1.0 / (h * (rho * A / (k * k) + s0 / k));
+#endif
+    
     qPrev = -_Vb.load();
     
     if (Global::bowDebug && Global::exciteString && bowing)
@@ -111,7 +149,7 @@ void TrombaString::paint (Graphics& g)
        You should replace everything in this method with your own
        drawing code..
     */
-#ifndef NOEDITOR
+
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
     g.setColour (Colours::cyan);
     int visualScaling = Global::outputScaling * 100;
@@ -132,14 +170,13 @@ void TrombaString::paint (Graphics& g)
     
     g.setColour (Colours::lawngreen);
     g.drawEllipse (connPos * h * getWidth(), getHeight() * 0.5 - (bridgeState * visualScaling), 2, 2, 5);
-#endif
 }
 
 void TrombaString::resized()
 {
 
 }
-#ifndef NOEDITOR
+
 Path TrombaString::visualiseState (int visualScaling)
 {
     auto stringBounds = getHeight() / 2.0;
@@ -153,11 +190,11 @@ Path TrombaString::visualiseState (int visualScaling)
     {
         float newY = -u[1][y] * visualScaling + stringBounds; // Needs to be -u, because a positive u would visually go down
         
-        /*if (isnan(x) || isinf(abs(x) || isnan(newY) || isinf(abs(newY))))
+       /* if (isnan(x) || isinf(abs(x) || isnan(newY) || isinf(abs(newY))))
         {
             std::cout << "Wait" << std::endl;
-        };*/
-        
+        };
+        */
         if (isnan(newY))
             newY = 0;
         stringPath.lineTo(x, newY);
@@ -166,7 +203,7 @@ Path TrombaString::visualiseState (int visualScaling)
     stringPath.lineTo(stateWidth, stringBounds - visualScaling * offset);
     return stringPath;
 }
-#endif
+
 void TrombaString::calculateUpdateEq()
 {
     for (int l = 2; l < N - 2; ++l)
@@ -182,11 +219,22 @@ void TrombaString::calculateUpdateEq()
     {
         // for using the same 'dynamic variables' during one loop
         Vb = _Vb.load();
+#ifdef EXPONENTIALBOW
         Fb = _Fb.load();
+#else
+        sig3w = (rand.nextFloat() * 2 - 1) * sig3;
+        fC = _fC.load();
+        fS = _fS.load();
+#endif
         bp = floor (_bowPos.load());
         alpha = _bowPos.load() - bp;
         NRbow();
-        excitation = E1 * Fb * q * exp (-a * q * q);
+        
+#ifdef EXPONENTIALBOW
+        excitation = E * Fb * q * Global::exp1(-a * q * q);
+#else
+        excitation = E * (sig0 * z + sig1 * zDot + sig2 * q + sig3w); //* (rho * csA);
+#endif
         Global::extrapolation (u[0], bp, alpha, -excitation);
     }
     
@@ -209,10 +257,8 @@ void TrombaString::updateStates()
     qPrev = q;
 }
 
-
 void TrombaString::excite()
 {
-#ifndef NOEDITOR
     exciteFlag = false;
 //    int width = floor ((N * 2.0) / 5.0) / 2.0;
     int width = 10;
@@ -228,9 +274,7 @@ void TrombaString::excite()
         u[1][startIdx + i] = u[1][startIdx + i] + val;
         u[2][startIdx + i] = u[2][startIdx + i] + val;
     }
-#endif
 }
-
 
 void TrombaString::NRbow()
 {
@@ -245,13 +289,14 @@ void TrombaString::NRbow()
     uIPrev1 = Global::interpolation (u[2], bp + 1, alpha);
     uIPrevM1 = Global::interpolation (u[2], bp - 1, alpha);
     
-    
-    // Calculate precalculable part
-    b = 2.0 / k * Vb + 2.0 * s0 * Vb - b1 * (uI - uIPrev) - cOhSq * (uI1 - 2.0 * uI + uIM1) + kOhhSq * (uI2 - 4.0 * uI1 + 6.0 * uI - 4.0 * uIM1 + uIM2) - b2 * ((uI1 - 2 * uI + uIM1) - (uIPrev1 - 2.0 * uIPrev + uIPrevM1));
-    
     // error term
     eps = 1;
     NRiterator = 0;
+    
+#ifdef EXPONENTIALBOW
+    // Calculate precalculable part
+    b = 2.0 / k * Vb + 2.0 * s0 * Vb - b1 * (uI - uIPrev) - cOhSq * (uI1 - 2.0 * uI + uIM1) + kOhhSq * (uI2 - 4.0 * uI1 + 6.0 * uI - 4.0 * uIM1 + uIM2) - b2 * ((uI1 - 2 * uI + uIM1) - (uIPrev1 - 2.0 * uIPrev + uIPrevM1));
+
 
     // NR loop
     while (eps > tol && NRiterator < 100)
@@ -263,12 +308,68 @@ void TrombaString::NRbow()
         ++NRiterator;
         if (NRiterator > 98)
         {
-           Logger::outputDebugString ("Nope");
+            std::cout << "Nope" << std::endl;
         }
     }
+#else
+    b = 2.0 / k * Vb - b1 * (uI - uIPrev) - cOhSq * (uI1 - 2 * uI + uIM1) + kOhhSq * (uI2 - 4 * uI1 + 6 * uI - 4 * uIM1 + uIM2) + 2 * s0 * Vb - b2 * ((uI1 - 2 * uI + uIM1) - (uIPrev1 - 2 * uIPrev + uIPrevM1));
+    z_ba = breakAwayFactor * fC * oOSig0;
+
+    while (eps > tol && NRiterator < 50 && fC > 0)
+    {
+        calcZDot();
+        
+        g1 = (2.0 / k + 2 * s0) * q + (sig0 * z + sig1 * zDot + sig2 * q + sig3w) / (rho * A * h) + b;
+        g2 = zDot - an;
+        
+        // compute derivatives
+        
+        // dz_ss/dv
+        dz_ss = (-2 * abs(q) * oOstrvSq * oOSig0) * (fS-fC) * espon;
+        dz_ssAbs = Global::sgn(zss) * dz_ss;
+        
+        dalph_v = 0; //d(alph)/dv
+        dalph_z = 0; //d(alph)/dz
+        zss = abs(zss);
+        if ((Global::sgn(z)==Global::sgn(q)) && (abs(z)>z_ba) && (abs(z)<zss) )
+        {
+            double cosarg = cos(Global::sgn(z) * arg);
+            dalph_v = 0.5 * double_Pi * cosarg * dz_ssAbs * (z_ba - abs(z)) * oOZssMinZba * oOZssMinZba;
+            dalph_z = 0.5 * double_Pi * cosarg * Global::sgn(z) * oOZssMinZba;
+        }
+        zss = zssNotAbs;
+        d_fnlv = 1 - z * ((alph + q * dalph_v) * zss - dz_ss * alph * q) * oOZss * oOZss;
+        d_fnlz = -q * oOZss * (z * dalph_z + alph);
+        //            d_fnl = d_fnlv * K1 + d_fnlz * kHalf;
+        
+        dg1v = 2.0 / k + 2 * s0 + sig1 / (rho * A * h) * d_fnlv + sig2 / (rho * A * h);
+        dg1z = sig0 / (rho * A * h) + sig1 / (rho * A * h) * d_fnlz;
+        dg2v = d_fnlv;
+        dg2z = d_fnlz - 2.0 / k;
+        
+        determ = dg1v * dg2z - dg1z * dg2v;
+        qPrevIt = q;
+        zPrevIt = z;
+        q = q - (1 / determ) * (dg2z * g1 - dg1z * g2);
+        z = z - (1 / determ) * (-dg2v * g1 + dg1v * g2);
+        
+        eps = sqrt((q-qPrevIt)*(q-qPrevIt) + (z-zPrevIt)*(z-zPrevIt));
+        ++NRiterator;
+    }
+    if (NRiterator == 50)
+    {
+        ++limitCount;
+        std::cout << _Fn.load() << " Limit! " << limitCount <<  std::endl;
+    }
+    //        std::cout << i << std::endl;
+    calcZDot();
     
+    zPrev = z;
+    zDotPrev = zDot;
+    anPrev = an;
+#endif
 }
-#ifndef NOEDITOR
+
 void TrombaString::mouseDown (const MouseEvent& e)
 {
     if (bowing)
@@ -285,27 +386,80 @@ void TrombaString::mouseDrag (const MouseEvent& e)
     if (ModifierKeys::getCurrentModifiers() == ModifierKeys::leftButtonModifier + ModifierKeys::ctrlModifier)
         _dampingFingerPos.store (e.x / static_cast<float>(getWidth()));
     else
+    {
+#ifdef EXPONENTIALBOW
         setBowingParameters (e.x, e.y, 0.05, 0.2, true);
+#else
+        setBowingParameters (e.x, e.y, _Fn.load(), 0.2, true);
+#endif
+
+    }
 }
 
 void TrombaString::mouseUp (const MouseEvent& e)
 {
     bowFlag = false;
 }
-#endif
+
 void TrombaString::setBowingParameters (float x, float y, double Fb, double Vb, bool mouseInteraction)
 {
 #ifndef NOEDITOR
-    xPos = x;
-	yPos = y;
+    xPos = x * (mouseInteraction ? 1 : getWidth());
+    yPos = y * (mouseInteraction ? 1 : getHeight());
+#else
+	xPos = x * N;
+	yPos = y * N;
 #endif
     bowFlag = true;
-    _Vb.store (Global::bowDebug || !mouseInteraction ? Vb : (y / static_cast<float> (getHeight()) - 0.5) * 2.0 * 0.2);
+	_Vb.store(Global::bowDebug || !mouseInteraction ? Vb : -(yPos / static_cast<float> (getHeight()) - 0.5) * 2.0 * 0.2);
+#ifdef EXPONENTIALBOW
     _Fb.store (Fb);
-#ifdef NOEDITOR
-    int loc = Global::bowDebug ? floor(N * 0.5) : floor (N * static_cast<float> (x));
 #else
-	int loc = Global::bowDebug ? floor(N * 0.5) : floor(N * static_cast<float> (xPos) / static_cast<float> (getWidth()));
+    setFn (Fb);
+#endif
+#ifdef NOEDITOR
+	int loc = xPos;
+#else
+    int loc = Global::bowDebug ? floor(N * 0.5) : floor (N * static_cast<float> (xPos) / static_cast<float> (getWidth()));
 #endif
     _bowPos.store (Global::clamp (loc, 3, N - 5)); // check whether these values are correct!!);
 }
+
+
+#ifndef EXPONENTIALBOW
+void TrombaString::calcZDot()
+{
+    espon = Global::exp1 (-((q * q) * oOstrvSq));         //exponential function
+    zss = Global::sgn(q) * (fC + (fS - fC) * espon) * oOSig0;   //steady state curve: z_ss(v)
+    //            std::cout << zss << std::endl;
+    if (q==0)
+        zss = fS * oOSig0;
+    
+    // elasto-plastic function \alph (v,z)
+    alph=0;
+    
+    oOZss = 1 / zss; // should use the absolute zss
+    zssNotAbs = zss;
+    zss = abs(zss);
+    
+    oOZssMinZba = 1 / (zss - z_ba); // should use the absolute zss
+    
+    if (Global::sgn(z)==Global::sgn(q))
+    {
+        if ((abs(z)>z_ba) && (abs(z)<zss))
+        {
+            arg = double_Pi * (z - Global::sgn(z) * 0.5 * (zss + z_ba)) * oOZssMinZba;
+            alph = 0.5 * (1 + sin(Global::sgn(z) * arg));
+        }
+        else if (abs(z)>=zss)
+        {
+            alph=1;
+        }
+    }
+    zss = zssNotAbs;
+    an = 2.0 / k * (z - zPrev) - anPrev;
+    
+    // non-linear function estimate
+    zDot = q * (1 - alph * z * oOZss);
+}
+#endif

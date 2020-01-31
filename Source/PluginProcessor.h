@@ -89,6 +89,7 @@ private:
 	AudioParameterFloat* mixString;
 	AudioParameterFloat* mixBridge;
 	AudioParameterFloat* mixBody;
+	AudioParameterFloat* breakAwayFactor;
 
 	float prevMixString, prevMixBridge, prevMixBody;
 	float aG = 0.99; // averaging filter gain

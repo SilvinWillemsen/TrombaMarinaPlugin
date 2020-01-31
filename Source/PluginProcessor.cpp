@@ -60,6 +60,11 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		45.0f,
 		120.0f,
 		60.0f));
+	addParameter(breakAwayFactor = new AudioParameterFloat("breakAwayFactor",
+		"Elasto Break Away",
+		0.0f,
+		1.0f,
+		0.7f));
 #endif
 }
 
@@ -140,15 +145,19 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	NamedValueSet parameters;
 
-	offset = 0;
+	offset = 1e-5;
 
 	// string
 	double r = 0.0005;
+#ifdef NOEDITOR
 	double f0 = *initFreq;
+#else
+	double f0 = 120.0;
+#endif
 	double rhoS = 7850.0;
 	double A = r * r * double_Pi;
 	double T = (f0 * f0 * 4.0) * rhoS * A;
-	bridgeLocRatio = 18.0 / 20.0;
+	bridgeLocRatio = 9.0 / 10.0;
 	parameters.set("rhoS", rhoS);
 	parameters.set("r", r);
 	parameters.set("A", r * r * double_Pi);
@@ -171,7 +180,7 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("Lx", 1.5);
 	parameters.set("Ly", 0.4);
 	parameters.set("s0P", 5);
-	parameters.set("s1P", 0.05);
+	parameters.set("s1P", 0.005);
 
 	// connection
 	parameters.set("K1", 5.0e6);
@@ -246,6 +255,7 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			body->excite();
 #ifdef NOEDITOR
 		trombaString->setBowingParameters (*bowPosition, 0, *bowForce, *bowVelocity, false);
+		trombaString->setBreakAwayFactor (*breakAwayFactor);
 #endif
 		tromba->calculateUpdateEqs();
 		trombaString->dampingFinger();
@@ -261,7 +271,9 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
 			+ tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
 #else 
+		//output = tromba->getOutput(0.8) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
 		output = tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling);
+
 #endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);

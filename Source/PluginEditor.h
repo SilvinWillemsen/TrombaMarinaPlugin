@@ -17,7 +17,7 @@
 //==============================================================================
 /**
 */
-class TrombaMarinaPluginAudioProcessorEditor  : public AudioProcessorEditor, public Timer
+class TrombaMarinaPluginAudioProcessorEditor : public AudioProcessorEditor, public Timer, public Slider::Listener
 {
 public:
     TrombaMarinaPluginAudioProcessorEditor (TrombaMarinaPluginAudioProcessor&);
@@ -28,10 +28,13 @@ public:
     void resized() override;
 
 	void timerCallback() override;
+	void sliderValueChanged (Slider* slider) override;
+
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
+	OwnedArray<Slider> sliders;
     TrombaMarinaPluginAudioProcessor& processor;
 	std::shared_ptr<Tromba> tromba;
 	unsigned long t = 0;
