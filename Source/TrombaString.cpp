@@ -155,19 +155,19 @@ void TrombaString::paint (Graphics& g)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
     g.setColour (Colours::grey);
     double ratioFingerToBridge = _dampingFingerPos.load() / connRatio;
-//    for (double i = 1.0; i < round(1.0 / ratioFingerToBridge); ++i)
-//    {
-//        g.drawLine (i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), 0.0, i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), getHeight());
-//    }
+    for (double i = 1.0; i < round(1.0 / ratioFingerToBridge); ++i)
+    {
+        g.drawLine (i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), 0.0, i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), getHeight());
+    }
     g.setColour (Colours::cyan);
     int visualScaling = Global::outputScaling * 100;
     Path stringPath = visualiseState (visualScaling, g);
     g.strokePath (stringPath, PathStrokeType(2.0f));
     g.setColour (Colours::yellow);
     
-//    if (_dampingFingerForce.load() != 0)
-//        g.drawEllipse (_dampingFingerPos.load() * getWidth(), getHeight() * 0.5, 2, 2, (_dampingFingerForce.load() * 0.8 + 0.2) * 20.0);
-//    
+    if (_dampingFingerForce.load() != 0)
+        g.drawEllipse (_dampingFingerPos.load() * getWidth(), getHeight() * 0.5, 2, 2, (_dampingFingerForce.load() * 0.8 + 0.2) * 20.0);
+    
     double opa = bowModel == exponential ? _Fb.load() * 10.0 : _Fn.load() * 10.0;
     if (opa >= 1.0)
     {
@@ -401,9 +401,12 @@ void TrombaString::mouseDrag (const MouseEvent& e)
 {
     if (!bowing)
         return;
-    if (ModifierKeys::getCurrentModifiers() == ModifierKeys::leftButtonModifier + ModifierKeys::ctrlModifier)
-        _dampingFingerPos.store (e.x / static_cast<float>(getWidth()));
-    else
+	if (ModifierKeys::getCurrentModifiers() == ModifierKeys::leftButtonModifier + ModifierKeys::ctrlModifier)
+	{
+		_dampingFingerPos.store(e.x / static_cast<float>(getWidth()));
+		std::cout << e.x / static_cast<float>(getWidth()) << std::endl;
+	}
+	else
     {
         if (getBowModel() == exponential)
             setBowingParameters (e.x, e.y, 0.05, 0.2, true);

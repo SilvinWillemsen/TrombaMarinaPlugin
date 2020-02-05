@@ -44,22 +44,22 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		"String Volume",
 		0.0f,
 		1.0f,
-		0.0f));
+		0.5f));
 	addParameter(mixBridge = new AudioParameterFloat("mixBridge",
 		"Bridge Volume",
 		0.0f,
 		1.0f,
-		0.2f));
+		0.0f));
 	addParameter(mixBody = new AudioParameterFloat("mixBody",
 		"Body Volume",
 		0.0f,
 		1.0f,
-		0.5f));
+		0.33f));
 	addParameter(initFreq = new AudioParameterFloat("initFreq",
 		"Init Frequency",
 		45.0f,
 		120.0f,
-		60.0f));
+		52.0f));
 	addParameter(breakAwayFactor = new AudioParameterFloat("breakAwayFactor",
 		"Elasto Break Away",
 		0.0f,
@@ -205,7 +205,10 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	bridge = tromba->getBridge();
 	body = tromba->getBody();
 
-	trombaString->setFingerPos(0.0);
+	double test = (bridgeLocRatio) * 0.5;
+	trombaString->setFingerPos(test);
+	trombaString->setFingerForce(0.2);
+
 #ifdef NOEDITOR
 	prevMixString = *mixString;
 	prevMixBridge = *mixBridge;
@@ -261,7 +264,7 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			body->excite();
 #ifdef NOEDITOR
 		trombaString->setBowingParameters (*bowPosition, 0, *bowForce, *bowVelocity, false);
-		trombaString->setBreakAwayFactor (*breakAwayFactor);
+		//trombaString->setBreakAwayFactor (*breakAwayFactor);
 #endif
 		tromba->calculateUpdateEqs();
 		trombaString->dampingFinger();
@@ -284,10 +287,9 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 #endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);
-        
+
 		//++t;
-	}
-	
+	}	
 }
 
 //==============================================================================
