@@ -38,8 +38,8 @@ TrombaString::TrombaString (NamedValueSet& parameters, double k, BowModel bowMod
 //    s0 = s0 * rho * A;
 //    s1 = s1 * rho * A;
     
-    N = floor (L * 0.95 / h);
-    h = L / N;
+    N = floor (0.95 / h);
+    h = 1.0 / static_cast<double>(N);
     std::cout << "String numpoints: " << N << std::endl;
     // initialise state vectors
     uVecs.reserve (3);
@@ -155,19 +155,19 @@ void TrombaString::paint (Graphics& g)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));   // clear the background
     g.setColour (Colours::grey);
     double ratioFingerToBridge = _dampingFingerPos.load() / connRatio;
-    for (double i = 1.0; i < round(1.0 / ratioFingerToBridge); ++i)
-    {
-        g.drawLine (i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), 0.0, i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), getHeight());
-    }
+//    for (double i = 1.0; i < round(1.0 / ratioFingerToBridge); ++i)
+//    {
+//        g.drawLine (i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), 0.0, i / double(round(1.0 / ratioFingerToBridge)) * connRatio * getWidth(), getHeight());
+//    }
     g.setColour (Colours::cyan);
     int visualScaling = Global::outputScaling * 100;
     Path stringPath = visualiseState (visualScaling, g);
     g.strokePath (stringPath, PathStrokeType(2.0f));
     g.setColour (Colours::yellow);
     
-    if (_dampingFingerForce.load() != 0)
-        g.drawEllipse (_dampingFingerPos.load() * getWidth(), getHeight() * 0.5, 2, 2, (_dampingFingerForce.load() * 0.8 + 0.2) * 20.0);
-    
+//    if (_dampingFingerForce.load() != 0)
+//        g.drawEllipse (_dampingFingerPos.load() * getWidth(), getHeight() * 0.5, 2, 2, (_dampingFingerForce.load() * 0.8 + 0.2) * 20.0);
+//    
     double opa = bowModel == exponential ? _Fb.load() * 10.0 : _Fn.load() * 10.0;
     if (opa >= 1.0)
     {
@@ -180,7 +180,10 @@ void TrombaString::paint (Graphics& g)
     g.fillRect(xPos - 5, yPos - getHeight() * 0.25, 10, getHeight() * 0.5);
     
     g.setColour (Colours::lawngreen);
-    g.drawEllipse (connPos * h * getWidth(), getHeight() * 0.5 - (bridgeState * visualScaling), 2, 2, 5);
+//    std::cout << "Width = " << getWidth() << std::endl;
+//    std::cout << "Bridge coordinate: (" << connPos / static_cast<double>(N) * getWidth() << ", " << getHeight() * 0.5 - (bridgeState * visualScaling) << ")" << std::endl;
+    if (!isnan(bridgeState))
+        g.drawEllipse (connPos * h * getWidth(), getHeight() * 0.5 - (bridgeState * visualScaling), 2, 2, 5);
 }
 
 void TrombaString::resized()

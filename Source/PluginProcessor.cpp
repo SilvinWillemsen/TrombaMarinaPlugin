@@ -278,12 +278,13 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			+ tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
 #else 
 		//output = tromba->getOutput(0.8) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
-		output = tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling);
+		output = 0.5 * tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling)
+        + 0.3 * tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
 
 #endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);
-
+        
 		//++t;
 	}
 	

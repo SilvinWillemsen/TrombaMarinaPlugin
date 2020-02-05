@@ -92,6 +92,6 @@ void TrombaMarinaPluginAudioProcessorEditor::sliderValueChanged(Slider* slider)
 	/*	if (slider == sliders[2])
 			tromba->getString()->setBreakAwayFactor(slider->getValue());
 		else*/
-			tromba->getString()->setBowingParameters(0.3, 0.0, sliders[1]->getValue(), sliders[0]->getValue(), false);
+//            tromba->getString()->setBowingParameters(0.3, 0.0, sliders[1]->getValue(), sliders[0]->getValue(), false);
 	}
 }

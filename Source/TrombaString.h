@@ -110,7 +110,7 @@ private:
     bool bowFlag = false;
     bool bowing = true;
     
-    std::atomic<double> _Fb {1.0};
+    std::atomic<double> _Fb {0.2};
     std::atomic<double> _Fn {0.5};
     std::atomic<double> _fC;
     std::atomic<double> _fS;
@@ -124,8 +124,8 @@ private:
     
     double offset;
     double connRatio;
-    int connPos;
-    double bridgeState;
+    int connPos = 0;
+    double bridgeState = 0;
     
     std::atomic<double> _dampingFingerPos, _dampingFingerForce;
     
