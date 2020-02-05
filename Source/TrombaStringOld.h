@@ -25,7 +25,7 @@ public:
     void paint (Graphics&) override;
     void resized() override;
     
-    Path visualiseState (int visualScaling, Graphics& g);
+    Path visualiseState (int visualScaling);
     void setBridgeState (double val) { bridgeState = val; };
     
     void calculateUpdateEq();
@@ -54,7 +54,6 @@ public:
     void setBowingParameters (float x, float y, double Fb, double Vb, bool mouseInteraction);
     
     void setFingerPos (double val) { _dampingFingerPos.store(val); };
-    void setFingerForce (double val) { _dampingFingerForce.store(val); };
     
     // debug getters
     int getBowPos() { return bp; };
@@ -63,6 +62,7 @@ public:
     double getNRiterator() { return NRiterator; };
     double getVb() { return Vb; };
     
+#ifndef EXPONENTIALBOW
     void calcZDot();
     void setNoise (double val) { sig3 = val; };
     
@@ -71,19 +71,19 @@ public:
         _fC.store(mud * val);
         _fS.store(mus * val);
     };
-    
-    BowModel getBowModel() { return bowModel.load(); };
-    void setBowModel (BowModel bm) { bowModel.store (bm); };
+#endif
+
+	void setBreakAwayFactor(double bAF) { breakAwayFactor = bAF; };
     
 private:
     double k, h;
     int N;
     
     // Physical parameters
-    double L, rho, A, T, E, Iner, s0, s1, cSq, kappaSq, lambdaSq, muSq;
+    double rho, A, T, E, Iner, s0, s1, cSq, kappaSq, lambdaSq, muSq;
     
     // update equation constants
-    double A1, A1ss, A2, A3, A4, A5, B1, B2, C1, C2, D, Eexp, Eelasto;
+    double A1, A2, A3, A4, A5, B1, B2, C1, C2, D, E1;
     
     // NR bow constants
     double b1, b2;
@@ -92,7 +92,9 @@ private:
     double z, zPrev, zPrevIt, zDot, zDotNext, zDotPrev, an, anPrev, scaleFact, fnl, z_ba, fC, fS, sig0, sig1, sig2, sig3, sig3w, oOSig0, E2, oOstrvSq, zss, zssNotAbs, oOZss, oOZssMinZba, dz_ss, dz_ssAbs, strv, espon, alph, dalph_v, dalph_z, d_fnlv, d_fnlz, d_fnl, arg, mus, mud, K1, vRelTemp, zTemp, g1, g2, dg1v, dg1z, dg2v, dg2z, determ, invJac, fp, qPrevIt, velCalcDiv;
     int limitCount = 0;
     Random rand;
-    
+
+	double breakAwayFactor = 0.7;
+
     // pointers to states
     std::vector<double*> u;
     
@@ -127,8 +129,8 @@ private:
     int connPos;
     double bridgeState;
     
-    std::atomic<double> _dampingFingerPos, _dampingFingerForce;
-    
-    std::atomic<BowModel> bowModel;
+    std::atomic<double> _dampingFingerPos;
+
+	BowModel bowModel;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrombaString)
 };

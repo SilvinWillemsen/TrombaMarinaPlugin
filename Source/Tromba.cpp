@@ -12,7 +12,7 @@
 #include "Tromba.h"
 
 //==============================================================================
-Tromba::Tromba (NamedValueSet& parameters, double k)  : k (k),
+Tromba::Tromba (NamedValueSet& parameters, double k, BowModel bowModel)  : k (k),
                                                         rhoS (*parameters.getVarPointer ("rhoS")),
                                                         A (*parameters.getVarPointer ("A")),
                                                         T (*parameters.getVarPointer ("T")),
@@ -36,7 +36,7 @@ Tromba::Tromba (NamedValueSet& parameters, double k)  : k (k),
 {
     kSq = k * k;
     
-    trombaString = std::make_shared<TrombaString> (parameters, k);
+    trombaString = std::make_shared<TrombaString> (parameters, k, bowModel);
     bridge = std::make_shared<Bridge> (parameters, k);
     body = std::make_shared<Body> (parameters, k);
     

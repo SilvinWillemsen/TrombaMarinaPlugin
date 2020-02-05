@@ -22,7 +22,7 @@
 class Tromba    : public Component
 {
 public:
-    Tromba (NamedValueSet& parameters, double k);
+    Tromba (NamedValueSet& parameters, double k, BowModel bowModel);
     ~Tromba();
 
     void paint (Graphics&) override;

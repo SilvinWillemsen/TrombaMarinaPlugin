@@ -70,7 +70,6 @@ public:
 private:
 	unsigned long t = 0;
 	double fs;
-	double freq = 440.0;
 
 	std::shared_ptr<Tromba> tromba;
 
@@ -79,6 +78,7 @@ private:
 	std::shared_ptr<Body> body;
 
 	double bridgeLocRatio;
+	double outputStringRatio;
 	double offset;
 
 #ifdef NOEDITOR

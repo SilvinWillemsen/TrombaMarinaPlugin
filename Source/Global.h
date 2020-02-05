@@ -10,8 +10,8 @@
 
 #pragma once
 #define CUBICINTERPOL
-#define NOEDITOR // define if compiling for unity
-//#define EXPONENTIALBOW
+//#define NOEDITOR // define if compiling for unity
+#define EXPONENTIALBOW
 
 namespace Global
 {
@@ -91,3 +91,9 @@ namespace Global
     static bool exciteBody = false;
     static double outputScaling = debug ? 1.0 : 1000.0;
 }
+
+enum BowModel
+{
+	exponential,
+	elastoPlastic
+};

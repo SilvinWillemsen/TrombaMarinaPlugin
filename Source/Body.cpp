@@ -27,8 +27,8 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     h = 2.0 * sqrt(k * (s1 + sqrt(kappaSq + s1 * s1)));
     
     // lower limit on h, otherwise there will be too many points
-    if (h < 0.015)
-        h = 0.015;
+    if (h < 0.01)
+        h = 0.01;
     
 //    // Scale damping by rho * A
 //    s0 = s0 * rho * H;

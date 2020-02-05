@@ -145,19 +145,25 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	NamedValueSet parameters;
 
-	offset = 1e-5;
+	offset = 5e-6;
 
 	// string
+
+
 	double r = 0.0005;
 #ifdef NOEDITOR
 	double f0 = *initFreq;
 #else
-	double f0 = 120.0;
+	double f0 = 52.0;
 #endif
 	double rhoS = 7850.0;
 	double A = r * r * double_Pi;
-	double T = (f0 * f0 * 4.0) * rhoS * A;
-	bridgeLocRatio = 9.0 / 10.0;
+	double L = 1.90;
+	double T = (f0 * f0 * L * L * 4.0) * rhoS * A;
+
+	bridgeLocRatio = 1.65 / 1.90;
+	outputStringRatio = (1.0 - bridgeLocRatio);
+	parameters.set("L", L);
 	parameters.set("rhoS", rhoS);
 	parameters.set("r", r);
 	parameters.set("A", r * r * double_Pi);
@@ -165,21 +171,21 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("ES", 2e11);
 	parameters.set("Iner", r * r * r * r * double_Pi * 0.25);
 	parameters.set("s0S", 0.1);
-	parameters.set("s1S", 1);
+	parameters.set("s1S", 0.05);
 
 	// bridge
 	parameters.set("M", 0.001);
-	parameters.set("R", 0.1);
+	parameters.set("R", 0.05);
 	parameters.set("w1", 2.0 * double_Pi * 500);
 	parameters.set("offset", offset);
 
 	// body
-	parameters.set("rhoP", 10.0);
+	parameters.set("rhoP", 50.0);
 	parameters.set("H", 0.01);
 	parameters.set("EP", 2e5);
-	parameters.set("Lx", 1.5);
-	parameters.set("Ly", 0.4);
-	parameters.set("s0P", 5);
+	parameters.set("Lx", 1.35);
+	parameters.set("Ly", 0.18);
+	parameters.set("s0P", 2);
 	parameters.set("s1P", 0.005);
 
 	// connection
@@ -188,12 +194,12 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("connRatio", bridgeLocRatio);
 
 	// plate collision
-	parameters.set("K2", 5.0e10);
+	parameters.set("K2", 5.0e8);
 	parameters.set("alpha2", 1.0);
 	parameters.set("colRatioX", 0.8);
-	parameters.set("colRatioY", 0.5);
+	parameters.set("colRatioY", 0.75);
 
-	tromba = std::make_shared<Tromba> (parameters, k);
+	tromba = std::make_shared<Tromba> (parameters, k, exponential);
 
 	trombaString = tromba->getString();
 	bridge = tromba->getBridge();
@@ -267,12 +273,12 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		prevMixString = prevMixString * aG + (1 - aG) * (*mixString);
 		prevMixBridge = prevMixBridge * aG + (1 - aG) * (*mixBridge);
 		prevMixBody = prevMixBody * aG + (1 - aG) * (*mixBody);
-		output = tromba->getOutput(0.9) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString
+		output = tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString
 			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
-			+ tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
+			+ tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
 #else 
 		//output = tromba->getOutput(0.8) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
-		output = tromba->getOutput(0.8, 0.5) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling);
+		output = tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling);
 
 #endif
 		channelData1[i] = Global::clamp(output, -1, 1);
