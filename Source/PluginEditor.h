@@ -34,7 +34,7 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-	OwnedArray<Slider> sliders;
+	OwnedArray<Slider> mixSliders;
     TrombaMarinaPluginAudioProcessor& processor;
 	std::shared_ptr<Tromba> tromba;
 	unsigned long t = 0;

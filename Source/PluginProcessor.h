@@ -67,6 +67,11 @@ public:
 		else
 			return val;
 	}
+
+	void setMixVal (int idx, double val) { mixVals[idx] = val; };
+	void setPrevMixVal(int idx, double val) { prevMixVals[idx] = val; };
+
+
 private:
 	unsigned long t = 0;
 	double fs;
@@ -76,6 +81,9 @@ private:
 	std::shared_ptr<TrombaString> trombaString;
 	std::shared_ptr<Bridge> bridge;
 	std::shared_ptr<Body> body;
+
+	std::vector<float> mixVals;
+	std::vector<float> prevMixVals;
 
 	double bridgeLocRatio;
 	double outputStringRatio;
@@ -89,12 +97,12 @@ private:
 	AudioParameterFloat* mixString;
 	AudioParameterFloat* mixBridge;
 	AudioParameterFloat* mixBody;
-	AudioParameterFloat* breakAwayFactor;
+	AudioParameterFloat* dampingFingerPos;
+	AudioParameterFloat* dampingFingerForce;
+#endif
 
 	float prevMixString, prevMixBridge, prevMixBody;
 	float aG = 0.99; // averaging filter gain
-#endif
-
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TrombaMarinaPluginAudioProcessor)

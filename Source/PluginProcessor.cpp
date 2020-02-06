@@ -24,6 +24,10 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
                        )
 #endif
 {
+	bridgeLocRatio = 1.65 / 1.90;
+	mixVals.resize(3, 0.0);
+	prevMixVals.resize(3, 0.0);
+
 #ifdef NOEDITOR
 	addParameter(bowVelocity = new AudioParameterFloat ("bowVelocity", // parameter ID
 		"Velocity", // parameter name
@@ -44,7 +48,7 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		"String Volume",
 		0.0f,
 		1.0f,
-		0.5f));
+		0.33f));
 	addParameter(mixBridge = new AudioParameterFloat("mixBridge",
 		"Bridge Volume",
 		0.0f,
@@ -54,17 +58,18 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		"Body Volume",
 		0.0f,
 		1.0f,
-		0.33f));
-	addParameter(initFreq = new AudioParameterFloat("initFreq",
-		"Init Frequency",
-		45.0f,
-		120.0f,
-		52.0f));
-	addParameter(breakAwayFactor = new AudioParameterFloat("breakAwayFactor",
-		"Elasto Break Away",
+		0.5f));
+	addParameter(dampingFingerPos = new AudioParameterFloat("dampingFingerPos",
+		"Pos damp finger",
+		0.0f,
+		bridgeLocRatio,
+		bridgeLocRatio * 0.5f));
+	addParameter(dampingFingerForce = new AudioParameterFloat("dampingFingerForce",
+		"Force damp finger",
 		0.0f,
 		1.0f,
-		0.7f));
+		0.2f));
+
 #endif
 }
 
@@ -145,23 +150,16 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	NamedValueSet parameters;
 
-	offset = 5e-6;
+	offset = 1e-5;
 
 	// string
-
-
 	double r = 0.0005;
-#ifdef NOEDITOR
-	double f0 = *initFreq;
-#else
 	double f0 = 52.0;
-#endif
 	double rhoS = 7850.0;
 	double A = r * r * double_Pi;
-	double L = 1.90;
+	double L = 1;
 	double T = (f0 * f0 * L * L * 4.0) * rhoS * A;
 
-	bridgeLocRatio = 1.65 / 1.90;
 	outputStringRatio = (1.0 - bridgeLocRatio);
 	parameters.set("L", L);
 	parameters.set("rhoS", rhoS);
@@ -264,10 +262,11 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 			body->excite();
 #ifdef NOEDITOR
 		trombaString->setBowingParameters (*bowPosition, 0, *bowForce, *bowVelocity, false);
-		//trombaString->setBreakAwayFactor (*breakAwayFactor);
+		trombaString->setFingerPos(*dampingFingerPos);
+		trombaString->setFingerForce(*dampingFingerForce);
 #endif
 		tromba->calculateUpdateEqs();
-		trombaString->dampingFinger();
+		//trombaString->dampingFinger();
 		tromba->calculateCollisions();
 		tromba->solveSystem();
 		tromba->updateStates();
@@ -276,20 +275,22 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		prevMixString = prevMixString * aG + (1 - aG) * (*mixString);
 		prevMixBridge = prevMixBridge * aG + (1 - aG) * (*mixBridge);
 		prevMixBody = prevMixBody * aG + (1 - aG) * (*mixBody);
+#else
+		prevMixString = prevMixString * aG + (1 - aG) * (mixVals[0]);
+		prevMixBridge = prevMixBridge * aG + (1 - aG) * (mixVals[1]);
+		prevMixBody = prevMixBody * aG + (1 - aG) * (mixVals[2]);
+#endif
 		output = tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString
 			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
 			+ tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
-#else 
-		//output = tromba->getOutput(0.8) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
-		output = 0.5 * tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling)
-        + 0.3 * tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling);
 
-#endif
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);
 
 		//++t;
-	}	
+	}
+	Logger::getCurrentLogger()->outputDebugString("String output = " + String(tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString));
+	Logger::getCurrentLogger()->outputDebugString("Plate output = " + String(tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody));
 }
 
 //==============================================================================
