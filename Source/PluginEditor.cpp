@@ -17,7 +17,7 @@ TrombaMarinaPluginAudioProcessorEditor::TrombaMarinaPluginAudioProcessorEditor (
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-	Timer::startTimerHz (30);
+	Timer::startTimerHz (60);
 	for (int i = 0; i < 3; ++i)
 	{
 		mixSliders.add(new Slider(Slider::LinearHorizontal, Slider::NoTextBox));

@@ -38,6 +38,8 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     Ny = floor(Ly/h);
     
     h = std::max (Lx/Nx, Ly/Ny);
+    Nx -= 1;
+    Ny -= 1;
     N = Nx * Ny;
     
     // initialise state vectors
@@ -55,7 +57,7 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     B2 = (2.0f * s1 * k) / (h * h);
     
     A1 = (2.0 - 4.0 * B2 - 20.0 * B1);
-    A2 = 8.0 * B1;
+    A2 = 8.0 * B1 + B2; //included B2 as well! :O
     A3 = -2.0 * B1;
     A4 = -B1;
     A5 = (s0 * k - 1.0 + 4.0 * B2);
@@ -68,7 +70,7 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     A5 *= D;
     A6 *= D;
     
-    excitationWidth = floor (std::min(Nx, Ny) * 0.2);
+    excitationWidth = 2;
 }
 
 Body::~Body()

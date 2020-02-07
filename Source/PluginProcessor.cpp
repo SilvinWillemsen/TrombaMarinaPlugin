@@ -150,14 +150,14 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	NamedValueSet parameters;
 
-	offset = 1e-5;
+	offset = 5e-6;
 
 	// string
 	double r = 0.0005;
-	double f0 = 52.0;
+	double f0 = 32.0;
 	double rhoS = 7850.0;
 	double A = r * r * double_Pi;
-	double L = 1;
+	double L = 1.90;
 	double T = (f0 * f0 * L * L * 4.0) * rhoS * A;
 
 	outputStringRatio = (1.0 - bridgeLocRatio);
@@ -184,7 +184,7 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	parameters.set("Lx", 1.35);
 	parameters.set("Ly", 0.18);
 	parameters.set("s0P", 2);
-	parameters.set("s1P", 0.005);
+	parameters.set("s1P", 0.05);
 
 	// connection
 	parameters.set("K1", 5.0e6);
@@ -205,7 +205,7 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 	double test = (bridgeLocRatio) * 0.5;
 	trombaString->setFingerPos(test);
-	trombaString->setFingerForce(0.2);
+	trombaString->setFingerForce(0.1);
 
 #ifdef NOEDITOR
 	prevMixString = *mixString;
@@ -266,7 +266,7 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		trombaString->setFingerForce(*dampingFingerForce);
 #endif
 		tromba->calculateUpdateEqs();
-		//trombaString->dampingFinger();
+        trombaString->dampingFinger();
 		tromba->calculateCollisions();
 		tromba->solveSystem();
 		tromba->updateStates();
@@ -289,8 +289,9 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 
 		//++t;
 	}
-	Logger::getCurrentLogger()->outputDebugString("String output = " + String(tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString));
-	Logger::getCurrentLogger()->outputDebugString("Plate output = " + String(tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody));
+    std::cout << tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody << std::endl;
+//    Logger::getCurrentLogger()->outputDebugString("String output = " + String(tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString));
+//    Logger::getCurrentLogger()->outputDebugString("Plate output = " + String(tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody));
 }
 
 //==============================================================================
