@@ -260,6 +260,7 @@ void TrombaString::dampingFinger()
     float dampLoc = Global::clamp(_dampingFingerPos.load() * N, 3, N - 4);
     double uVal = Global::interpolation(u[0], floor(dampLoc), dampLoc - floor(dampLoc)) - offset;
     double dampingScaling = 1.0 - _dampingFingerForce.load();
+	//Logger::getCurrentLogger()->outputDebugString (String (dampingScaling));
     Global::extrapolation (u[0], floor(dampLoc), pow(dampLoc - floor(dampLoc), 7), -(uVal - uVal * dampingScaling));
 }
 
@@ -422,16 +423,24 @@ void TrombaString::mouseUp (const MouseEvent& e)
 
 void TrombaString::setBowingParameters (float x, float y, double Fb, double Vb, bool mouseInteraction)
 {
-    xPos = x * (mouseInteraction ? 1 : getWidth());
-    yPos = y * (mouseInteraction ? 1 : getHeight());
-    bowFlag = true;
-    _Vb.store (Global::bowDebug || !mouseInteraction ? Vb : -(yPos / static_cast<float> (getHeight()) - 0.5) * 2.0 * 0.2);
-    if (getBowModel() == exponential)
-        _Fb.store (Fb);
-    else if (getBowModel() == elastoPlastic)
-        setFn (Fb);
-    
-    int loc = Global::bowDebug ? floor(N * 0.5) : floor (N * static_cast<float> (xPos) / static_cast<float> (getWidth()));
+#ifndef NOEDITOR
+	xPos = x * (mouseInteraction ? 1 : getWidth());
+	yPos = y * (mouseInteraction ? 1 : getHeight());
+#else
+	xPos = x * N;
+	yPos = y * N;
+#endif
+	bowFlag = true;
+	_Vb.store(Global::bowDebug || !mouseInteraction ? Vb : -(yPos / static_cast<float> (getHeight()) - 0.5) * 2.0 * 0.2);
+	if (getBowModel() == exponential)
+		_Fb.store (Fb);
+	else if (getBowModel() == elastoPlastic)
+		setFn (Fb);
+#ifdef NOEDITOR
+	int loc = xPos;
+#else
+	int loc = Global::bowDebug ? floor(N * 0.5) : floor(N * static_cast<float> (xPos) / static_cast<float> (getWidth()));
+#endif
     _bowPos.store (Global::clamp (loc, 3, N - 5)); // check whether these values are correct!!);
 }
 

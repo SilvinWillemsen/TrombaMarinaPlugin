@@ -10,7 +10,7 @@
 
 #pragma once
 #define CUBICINTERPOL
-//#define NOEDITOR // define if compiling for unity
+#define NOEDITOR // define if compiling for unity
 
 namespace Global
 {

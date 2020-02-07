@@ -38,17 +38,17 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		"Force", // parameter name
 		0.0f,   // minimum value
 		0.5f,   // maximum value
-		0.08f)); // default value
+		0.05f)); // default value
 	addParameter(bowPosition = new AudioParameterFloat("bowPosition", // parameter ID
 		"Position", // parameter name
-		0.1f,   // minimum value
-		0.3f,   // maximum value
-		0.2f)); // default value
+		0.05f,   // minimum value
+		0.5f,   // maximum value
+		0.1f)); // default value
 	addParameter(mixString = new AudioParameterFloat("mixString",
 		"String Volume",
 		0.0f,
 		1.0f,
-		0.33f));
+		0.2f));
 	addParameter(mixBridge = new AudioParameterFloat("mixBridge",
 		"Bridge Volume",
 		0.0f,
@@ -62,13 +62,13 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 	addParameter(dampingFingerPos = new AudioParameterFloat("dampingFingerPos",
 		"Pos damp finger",
 		0.0f,
-		bridgeLocRatio,
-		bridgeLocRatio * 0.5f));
+		1.0f,
+		0.5f));
 	addParameter(dampingFingerForce = new AudioParameterFloat("dampingFingerForce",
 		"Force damp finger",
 		0.0f,
 		1.0f,
-		0.2f));
+		0.1f));
 
 #endif
 }
@@ -208,9 +208,9 @@ void TrombaMarinaPluginAudioProcessor::prepareToPlay (double sampleRate, int sam
 	trombaString->setFingerForce(0.1);
 
 #ifdef NOEDITOR
-	prevMixString = *mixString;
-	prevMixBridge = *mixBridge;
-	prevMixBody = *mixBody;
+	prevMixVals[0] = *mixString;
+	prevMixVals[1] = *mixBridge;
+	prevMixVals[2] = *mixBody;
 #endif
 }
 
@@ -261,8 +261,8 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		if (body->isExcited())
 			body->excite();
 #ifdef NOEDITOR
-		trombaString->setBowingParameters (*bowPosition, 0, *bowForce, *bowVelocity, false);
-		trombaString->setFingerPos(*dampingFingerPos);
+		trombaString->setBowingParameters (*bowPosition * bridgeLocRatio, 0, *bowForce, *bowVelocity, false);
+		trombaString->setFingerPos(*dampingFingerPos * bridgeLocRatio);
 		trombaString->setFingerForce(*dampingFingerForce);
 #endif
 		tromba->calculateUpdateEqs();
@@ -272,17 +272,17 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 		tromba->updateStates();
 
 #ifdef NOEDITOR
-		prevMixString = prevMixString * aG + (1 - aG) * (*mixString);
-		prevMixBridge = prevMixBridge * aG + (1 - aG) * (*mixBridge);
-		prevMixBody = prevMixBody * aG + (1 - aG) * (*mixBody);
+		prevMixVals[0] = prevMixVals[0] * aG + (1 - aG) * (*mixString);
+		prevMixVals[1] = prevMixVals[1] * aG + (1 - aG) * (*mixBridge);
+		prevMixVals[2] = prevMixVals[2] * aG + (1 - aG) * (*mixBody);
 #else
-		prevMixString = prevMixString * aG + (1 - aG) * (mixVals[0]);
-		prevMixBridge = prevMixBridge * aG + (1 - aG) * (mixVals[1]);
-		prevMixBody = prevMixBody * aG + (1 - aG) * (mixVals[2]);
+		prevMixVals[0] = prevMixVals[0] * aG + (1 - aG) * (mixVals[0]);
+		prevMixVals[1] = prevMixVals[1] * aG + (1 - aG) * (mixVals[1]);
+		prevMixVals[2] = prevMixVals[2] * aG + (1 - aG) * (mixVals[2]);
 #endif
-		output = tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString
-			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixBridge
-			+ tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody;
+		output = tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixVals[0]
+			+ tromba->getOutput() * (Global::debug ? 1.0 : 3.0 * Global::outputScaling) * prevMixVals[1]
+			+ tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixVals[2];
 
 		channelData1[i] = Global::clamp(output, -1, 1);
 		channelData2[i] = Global::clamp(output, -1, 1);

@@ -26,7 +26,7 @@ TrombaMarinaPluginAudioProcessorEditor::TrombaMarinaPluginAudioProcessorEditor (
 		switch (i)
 		{
 		case 0:
-			newSlider->setValue(0.25);
+			newSlider->setValue(0.2);
 			break;
 		case 1:
 			newSlider->setValue(0.0);

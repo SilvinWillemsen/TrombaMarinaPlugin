@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="QAfVBP" name="TrombaMarinaPlugin" projectType="audioplug"
-              jucerVersion="5.4.4" pluginFormats="buildStandalone,buildUnity"
+              jucerVersion="5.3.2" pluginFormats="buildStandalone,buildUnity"
               pluginChannelConfigs="{0,2}">
   <MAINGROUP id="Lcgr83" name="TrombaMarinaPlugin">
     <GROUP id="{E90D65FB-3E55-C941-462C-70AD50609522}" name="Source">

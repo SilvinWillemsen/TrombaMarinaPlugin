@@ -101,7 +101,6 @@ private:
 	AudioParameterFloat* dampingFingerForce;
 #endif
 
-	float prevMixString, prevMixBridge, prevMixBody;
 	float aG = 0.99; // averaging filter gain
 
     //==============================================================================
