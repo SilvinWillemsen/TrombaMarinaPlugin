@@ -1,12 +1,12 @@
 /*
-  ==============================================================================
-
-    Body.h
-    Created: 21 Oct 2019 4:49:29pm
-    Author:  Silvin Willemsen
-
-  ==============================================================================
-*/
+ ==============================================================================
+ 
+ Body.h
+ Created: 21 Oct 2019 4:49:29pm
+ Author:  Silvin Willemsen
+ 
+ ==============================================================================
+ */
 
 #pragma once
 
@@ -16,16 +16,16 @@
 
 //==============================================================================
 /*
-*/
+ */
 class Body    : public Component
 {
 public:
     Body (NamedValueSet& parameters, double k);
     ~Body();
-
+    
     void paint (Graphics&) override;
     void resized() override;
-
+    
     void calculateUpdateEq();
     void updateStates();
     
@@ -33,16 +33,16 @@ public:
     
     
     double getOutput (double ratioX, double ratioY) {
-        int idx = floor (Nx * ratioX) + floor (ratioY * Ny * Nx);
+        int idx = floor (Nx * (ratioX + floor(ratioY * Ny)));
         return u[1][idx];
         
     };
     double getStateAt (int time, int idX, int idY) {
         return u[time][idX + Nx * idY];
     };
-
+    
     void addToStateAt (int idX, int idY, double val) { u[0][idX + Nx * idY] += val; }; // always uNext
-
+    
     int getNumHorPoints() { return Nx; };
     int getNumVertPoints() { return Ny; };
     
@@ -69,6 +69,6 @@ private:
     int excitationWidth;
     bool exciteFlag = false;
     int idX, idY;
-
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Body)
 };

@@ -1,42 +1,43 @@
 /*
-  ==============================================================================
-
-    Body.cpp
-    Created: 21 Oct 2019 4:49:29pm
-    Author:  Silvin Willemsen
-
-  ==============================================================================
-*/
+ ==============================================================================
+ 
+ Body.cpp
+ Created: 21 Oct 2019 4:49:29pm
+ Author:  Silvin Willemsen
+ 
+ ==============================================================================
+ */
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Body.h"
 
 //==============================================================================
 Body::Body (NamedValueSet& parameters, double k) :  k (k),
-                                                    rho (*parameters.getVarPointer("rhoP")),
-                                                    H (*parameters.getVarPointer("H")),
-                                                    E (*parameters.getVarPointer("EP")),
-                                                    s0 (*parameters.getVarPointer("s0P")),
-                                                    s1 (*parameters.getVarPointer("s1P")),
-                                                    Lx (*parameters.getVarPointer("Lx")),
-                                                    Ly (*parameters.getVarPointer("Ly"))
+rho (*parameters.getVarPointer("rhoP")),
+H (*parameters.getVarPointer("H")),
+E (*parameters.getVarPointer("EP")),
+s0 (*parameters.getVarPointer("s0P")),
+s1 (*parameters.getVarPointer("s1P")),
+Lx (*parameters.getVarPointer("Lx")),
+Ly (*parameters.getVarPointer("Ly"))
 {
-    double Dkappa = E * H * H * H / (12.0 * (1.0-0.3 * 0.3));
+    double Dkappa = E * H * H * H / (12.0 * (1.0-(0.3*0.3)));
     kappaSq = Dkappa / (rho * H);
-    
+    //    s1 = s1 / (rho * H);
     h = 2.0 * sqrt(k * (s1 + sqrt(kappaSq + s1 * s1)));
-    
+    std::cout << "h = " << h << std::endl;
     // lower limit on h, otherwise there will be too many points
     if (h < 0.01)
         h = 0.01;
     
-//    // Scale damping by rho * A
-//    s0 = s0 * rho * H;
-//    s1 = s1 * rho * H;
+    //    // Scale damping by rho * A
+    //    s0 = s0 * rho * H;
+    //    s1 = s1 * rho * H;
     
     Nx = floor(Lx/h);
     Ny = floor(Ly/h);
     
+    std::cout << "(" << Nx << ", " << Ny << ")" << std::endl;
     h = std::max (Lx/Nx, Ly/Ny);
     Nx -= 1;
     Ny -= 1;
@@ -50,7 +51,7 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     u.resize (3);
     for (int i = 0; i < u.size(); ++i)
         u[i] = &uVecs[i][0];
-
+    
     
     D = 1.0f / (1.0f + s0 * k);
     B1 = (kappaSq * k * k) / (h * h * h * h);
@@ -58,8 +59,8 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     
     A1 = (2.0 - 4.0 * B2 - 20.0 * B1);
     A2 = 8.0 * B1 + B2; //included B2 as well! :O
-    A3 = -2.0 * B1;
-    A4 = -B1;
+    A3 = -2.0 * B1; // l+1,m+1, etc
+    A4 = -B1; // l+2,m, etc.
     A5 = (s0 * k - 1.0 + 4.0 * B2);
     A6 = -B2;
     
@@ -70,6 +71,7 @@ Body::Body (NamedValueSet& parameters, double k) :  k (k),
     A5 *= D;
     A6 *= D;
     
+    //    excitationWidth = floor (std::min(Nx, Ny) * 0.2);
     excitationWidth = 2;
 }
 
@@ -100,7 +102,7 @@ void Body::resized()
 {
     // This method is where you should set the bounds of any child
     // components that your component contains..
-
+    
 }
 
 void Body::calculateUpdateEq()
@@ -145,7 +147,7 @@ void Body::updateStates()
 void Body::excite()
 {
     exciteFlag = false;
-
+    
     excitationWidth = Global::clamp (excitationWidth, 1, Nx - 5);
     std::vector<std::vector<double>> excitationArea (excitationWidth, std::vector<double> (excitationWidth, 0));
     

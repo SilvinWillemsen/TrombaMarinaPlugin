@@ -289,9 +289,6 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 
 		//++t;
 	}
-    std::cout << tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody << std::endl;
-//    Logger::getCurrentLogger()->outputDebugString("String output = " + String(tromba->getOutput(outputStringRatio) * (Global::debug ? 1.0 : 8.0 * Global::outputScaling) * prevMixString));
-//    Logger::getCurrentLogger()->outputDebugString("Plate output = " + String(tromba->getOutput(0.8, 0.75) * (Global::debug ? 1.0 : 50.0 * Global::outputScaling) * prevMixBody));
 }
 
 //==============================================================================
