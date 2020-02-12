@@ -41,9 +41,9 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		0.05f)); // default value
 	addParameter(bowPosition = new AudioParameterFloat("bowPosition", // parameter ID
 		"Position", // parameter name
-		0.05f,   // minimum value
-		0.5f,   // maximum value
-		0.1f)); // default value
+		0.01f,   // minimum value
+		0.8f,   // maximum value
+		0.25f)); // default value
 	addParameter(mixString = new AudioParameterFloat("mixString",
 		"String Volume",
 		0.0f,
