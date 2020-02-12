@@ -99,8 +99,10 @@ private:
 	AudioParameterFloat* mixBody;
 	AudioParameterFloat* dampingFingerPos;
 	AudioParameterFloat* dampingFingerForce;
+    AudioParameterFloat* resetBool;
 #endif
-
+    
+    bool resetFlag = false;
 	float aG = 0.99; // averaging filter gain
 
     //==============================================================================

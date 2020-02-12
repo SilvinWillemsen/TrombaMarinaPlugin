@@ -75,6 +75,8 @@ public:
     BowModel getBowModel() { return bowModel.load(); };
     void setBowModel (BowModel bm) { bowModel.store (bm); };
     
+    void reset();
+    
 private:
     double k, h;
     int N;

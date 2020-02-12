@@ -44,6 +44,7 @@ public:
     
     void setCurSample (unsigned long curSamp) { curSample = curSamp; };
     
+    void reset();
 private:
     
     double k, kSq; 

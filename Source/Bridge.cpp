@@ -93,3 +93,11 @@ void Bridge::mouseDown (const MouseEvent& e)
 {
     excite();
 }
+
+void Bridge::reset()
+{
+    for (int i = 0; i < uVecs.size(); ++i)
+    {
+        uVecs[i] = 0;
+    }
+}

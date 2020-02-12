@@ -186,3 +186,14 @@ void Body::mouseDrag (const MouseEvent& e)
     idX = Nx * (e.x / static_cast<float> (getWidth()));
     idY = Ny * (e.y / static_cast<float> (getHeight()));
 }
+
+void Body::reset()
+{
+    for (int i = 0; i < uVecs.size(); ++i)
+    {
+        for (int j = 0; j < uVecs[i].size(); ++j)
+        {
+            uVecs[i][j] = 0;
+        }
+    }
+}

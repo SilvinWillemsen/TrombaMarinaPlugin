@@ -479,3 +479,20 @@ void TrombaString::calcZDot()
     // non-linear function estimate
     zDot = q * (1 - alph * z * oOZss);
 }
+
+void TrombaString::reset()
+{
+    for (int i = 0; i < uVecs.size(); ++i)
+    {
+        for (int j = 0; j < uVecs[i].size(); ++j)
+        {
+            uVecs[i][j] = 0;
+        }
+    }
+    q = 0;
+    qPrev = 0;
+    z = 0;
+    zPrev = 0;
+    zDotPrev = 0;
+    anPrev = 0;
+}

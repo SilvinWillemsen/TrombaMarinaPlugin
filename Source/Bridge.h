@@ -38,6 +38,7 @@ public:
     void setBodyState (double state) { bodyState = state; };
     void addToState (double val) {u[0][0] += val; };
     
+    void reset();
 private:
     double k;
     

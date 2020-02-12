@@ -69,6 +69,11 @@ TrombaMarinaPluginAudioProcessor::TrombaMarinaPluginAudioProcessor()
 		0.0f,
 		1.0f,
 		0.1f));
+    addParameter(resetBool = new AudioParameterFloat("resetBool",
+          "Reset",
+          0.0f,
+          1.0f,
+          0.0f));
 
 #endif
 }
@@ -251,6 +256,16 @@ void TrombaMarinaPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 	float* const channelData1 = buffer.getWritePointer(0);
 	float* const channelData2 = buffer.getWritePointer(1);
 
+#ifdef NOEDITOR
+    if (*resetBool == 1.0f && !resetFlag)
+    {
+        tromba->reset();
+        resetFlag = true;
+    } else if (*resetBool != 1.0f && resetFlag) {
+        resetFlag = false;
+    }
+#endif
+    
 	float output = 0.0;
 	for (int i = 0; i < buffer.getNumSamples(); ++i)
 	{	

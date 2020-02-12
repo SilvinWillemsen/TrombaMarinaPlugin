@@ -314,3 +314,13 @@ void Tromba::updateStates()
     bridge->updateStates();
     body->updateStates();
 }
+
+void Tromba::reset()
+{
+    trombaString->reset();
+    bridge->reset();
+    body->reset();
+    
+    psi1Prev = 0;
+    psi2Prev = 0;
+}
