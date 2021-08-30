@@ -120,6 +120,15 @@ void Body::calculateUpdateEq()
             + A6 * (u[2][l + (m+1) * Nx] + u[2][l + (m-1) * Nx] + u[2][l+1 + m * Nx] + u[2][l-1 + m * Nx]);
         }
     }
+    
+    counter++;
+    if (counter == 512)
+    {
+        counter = 0;
+        if (abs(getOutput (0.8, 0.75)) < 1e-200)
+            reset();
+        //        std::cout << getOutput (0.8, 0.75) << std::endl;
+    }
 }
 
 //    for (int l = 2; l < Nx - 2; l++)

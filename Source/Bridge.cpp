@@ -98,6 +98,6 @@ void Bridge::reset()
 {
     for (int i = 0; i < uVecs.size(); ++i)
     {
-        uVecs[i] = 0;
+        uVecs[i] = offset;
     }
 }

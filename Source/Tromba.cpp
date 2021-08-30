@@ -148,7 +148,7 @@ void Tromba::calculateCollisions()
 {
     etaConn = bridge->getState(1) - trombaString->getStateAt (1, floor(connRatio * trombaString->getNumPoints()));
     etaCol = body->getStateAt(1, cPX, cPY) - bridge->getState(1);
-    g1 = sqrt(K1 * (alph1 + 1.0) * 0.5) * pow(abs(etaConn),((alph1 - 1.0) * 0.5));
+    g1 = Global::sgn(etaConn) * sqrt(K1 * (alph1 + 1.0) * 0.5) * pow(abs(etaConn),((alph1 - 1.0) * 0.5));
 //    g1 = 0;
 //    if (etaConn > 0)
 //    {

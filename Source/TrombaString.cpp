@@ -486,7 +486,7 @@ void TrombaString::reset()
     {
         for (int j = 0; j < uVecs[i].size(); ++j)
         {
-            uVecs[i][j] = 0;
+            uVecs[i][j] = offset;
         }
     }
     q = 0;
